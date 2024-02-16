@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<!-- Color Picker: Ask the user to enter three(R-G-B) two digit hex numbers and display the color -->
+<!-- If the user happens to enter numbers that correspond to a standard color, tell them the name --> 
+<!-- If the user provide hex code does not correspond to a standard color, just echo the composite hex code -->
+
+<!-- Here is the pseudocode -->
+<!-- 1) Explain the big picture to the user: enter three hex numbers and see the color it makes -->
+<!-- 2) Provide three input boxes, one for each primary color: Red, Green, Blue -->
+<!-- 3) Do input validation to ensure that each of the boxes contains a valid two digit hex number -->
+<!-- 4) If any of the three is not valid, prompt the user to correct their entry -->
+<!-- 5) Once all three boxes have valid inputs and the user hits the "Color It!" button, respond by -->
+<!--    displaying the color in a boring looking wheel, and the name, if it is a standard color -->
+<!-- 6) Then, urge the user to get more colors by picking one of three radio buttons below -->
+<!-- 7) Provide encouraging messages for each choice -->
+<!-- 8) Do a rudimentary check for hex code numbers that are close to, or actually, black or white -->
+<!--    and just show a random color set because it might be very difficult to find darker or brighter colors -->
+
+<!-- Future expansion - How can this be done differently or better using Svelte? -->
+<!-- Future expansion - Implement a more sophisticated "near white" and "near black" detection -->
+<!-- Future expansion - Allow user to toggle between hexcodes and colors in words, with input validation -->
+
+<html>
+<body>
+<style>
+/* Setup styles for body to control overall color and page layout, orientation */
+        body{
+            background-color: darkslategrey;
+            font-family: Arial, Helvetica, sans-serif;
+            color:aliceblue;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+        }
+
+/* Style h1, h2 and p tags */
+        h1{
+            color:darkorange;
+            line-height: 2.0;
+        }
+        h2{
+            color:salmon;
+            line-height: 1.6;
+        }
+        p{
+            color:goldenrod; 
+            line-height: 1.6;
+            font-size: 18px;
+        }
+
+/* Control font size of status message */
+        #status_msg {
+            font-size: 25px;
+        }
+
+/* Control input font size and alignment */
+        input {
+            width: 90px;
+            font-size: 15px; 
+            text-align: center;
+        }
+
+/* Control button size and font and layout spacing */
+        .custom-button {
+            width: 100px; 
+            font-size: 15px; 
+            margin-top: 10px; 
+            margin-right: 10px;
+        }
+
+/* Set up two equal divs for a left-right display */
+
+/* The left-div is for user input */
+        #left-div {
+            width: 50%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            justify-content: center;
+            border: 2px solid black;
+        }
+
+/* The right-div is to display colors in a color wheel */
+        #right-div {
+            width: 50%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            justify-content: center;
+            border: 2px solid black;
+        } 
+
+/* Control radio button label spacing to keep everything under the wheel and in the right-div */
+        label {
+            margin-left: 0px;
+            margin-right: 20px;
+        }
+
+/* Create the color wheel and set it up to receive color parameters along with rotation angles */
+        .circle {
+          width: 500px;
+          height: 500px;
+          border-radius: 50%;
+          background: conic-gradient(var(--colors));
+        }
+
+/* This is used to hide radio buttons until it makes sense to show them */
+        #variation, #variation_prompt {
+            display: none;
+        }
+</style>
+
+<!-- Set up the left-div: Headline, Instructions, Input boxes, Button -->
+<div id="left-div">
+    <!-- Headline -->
+    <h1>Let's Play With Color!</h1>
+    <!-- Instruction -->
+    <h2> Enter a two digit hexadecimal number in each box below. A hex digit can range from 0-9 or A-F</h2>
+    <!-- Input boxes, one each for red, green and blue hex code components -->
+    <form name="hex_in">
+       <div style="background-color: lightgrey; width:320px; height: 30px; display: flex; align-items: center; justify-content: center;"> 
+        <input type="text" style="height:20px; text-align:center; border: 3px solid red; margin-right: 7px" id="red" maxlength="2" tabindex="1" autofocus>
+        <input type="text" style="height:20px; text-align:center; border: 3px solid green; margin-right: 7px" id="green" maxlength="2" tabindex="2">
+        <input type="text" style="height:20px; text-align:center; border: 3px solid blue" id="blue" maxlength="2" tabindex="3"><BR><BR>
+       </div> 
+    </form>
+    <!-- Instruction -->
+    <h2 id="input_status_msg"> Each hex number will determine how much Red, Green, Blue is in the final color </h2>
+    <!-- Button -->
+    <input type="button" id="left_div_btn" class="custom-button" tabindex="4" value="Color It!" onClick="Color()">
+    <!-- Placeholder for status message to deal with input validation -->
+    <p id="status_msg"></p>
+</div>
+    
+<!-- Set up the right-div: Headline, Color Wheel, Radio Buttons, Prompt for radio buttons -->    
+<div id="right-div">
+    <!-- Headline -->
+    <h2 id="right_div_top_msg"> Yawn...what a B-O-R-I-N-G color wheel</h2>
+    <!-- Instantiate color wheel and space below for separation from radio buttons -->
+    <div class="circle"></div>
+    <BR></BR>
+    <!-- Radio buttons that allow user to select a color variation -->
+    <form id="variation">
+        <input type="radio" id="option1" name="options" value="Brighter" onchange="More_Color()" style="height: 15px; width: 10px">
+        <label for="option1">Brighter</label>
+    
+        <input type="radio" id="option2" name="options" value="Random" onchange="More_Color()" style="height: 15px; width: 10px">
+        <label for="option2">Random</label>
+    
+        <input type="radio" id="option3" name="options" value="Darker" onchange="More_Color()" style="height:15px; width: 10px">
+        <label for="option3">Darker</label>
+    </form>
+    <!-- Prompt to encourage user to select a radio button and reinforce headline message -->
+    <p id="variation_prompt"><strong>Pick a button to see what happens!</strong></p>
+</div>
+    
+
+<script>
+//  Build an object-literal key:value pair list of all known web colors
+//  This allows for a simple lookup based on user input
+//  It also sets up for a future expansion to allow color entry in words
+
+    const knownWebColors = {
+            '#000000': 'Black',
+            '#000080': 'Navy',
+            '#00008B': 'DarkBlue',
+            '#0000CD': 'MediumBlue',
+            '#0000FF': 'Blue',
+            '#006400': 'DarkGreen',
+            '#008000': 'Green',
+            '#008080': 'Teal',
+            '#008B8B': 'DarkCyan',
+            '#00BFFF': 'DeepSkyBlue',
+            '#00CED1': 'DarkTurquoise',
+            '#00FA9A': 'MediumSpringGreen',
+            '#00FF00': 'Lime',
+            '#00FF7F': 'SpringGreen',
+            '#00FFFF': 'Aqua',
+            '#00FFFF': 'Cyan',
+            '#191970': 'MidnightBlue',
+            '#1E90FF': 'DodgerBlue',
+            '#20B2AA': 'LightSeaGreen',
+            '#228B22': 'ForestGreen',
+            '#2E8B57': 'SeaGreen',
+            '#2F4F4F': 'DarkSlateGray',
+            '#2F4F4F': 'DarkSlateGrey',
+            '#32CD32': 'LimeGreen',
+            '#3CB371': 'MediumSeaGreen',
+            '#40E0D0': 'Turquoise',
+            '#4169E1': 'RoyalBlue',
+            '#4682B4': 'SteelBlue',
+            '#483D8B': 'DarkSlateBlue',
+            '#48D1CC': 'MediumTurquoise',
+            '#4B0082': 'Indigo',
+            '#556B2F': 'DarkOliveGreen',
+            '#5F9EA0': 'CadetBlue',
+            '#6495ED': 'CornflowerBlue',
+            '#663399': 'RebeccaPurple',
+            '#66CDAA': 'MediumAquaMarine',
+            '#696969': 'DimGray',
+            '#696969': 'DimGrey',
+            '#6A5ACD': 'SlateBlue',
+            '#6B8E23': 'OliveDrab',
+            '#708090': 'SlateGray',
+            '#708090': 'SlateGrey',
+            '#778899': 'LightSlateGray',
+            '#778899': 'LightSlateGrey',
+            '#7B68EE': 'MediumSlateBlue',
+            '#7CFC00': 'LawnGreen',
+            '#7FFF00': 'Chartreuse',
+            '#7FFFD4': 'Aquamarine',
+            '#800000': 'Maroon',
+            '#800080': 'Purple',
+            '#808000': 'Olive',
+            '#808080': 'Gray',
+            '#808080': 'Grey',
+            '#87CEEB': 'SkyBlue',
+            '#87CEFA': 'LightSkyBlue',
+            '#8A2BE2': 'BlueViolet',
+            '#8B0000': 'DarkRed',
+            '#8B008B': 'DarkMagenta',
+            '#8B4513': 'SaddleBrown',
+            '#8FBC8F': 'DarkSeaGreen',
+            '#90EE90': 'LightGreen',
+            '#9370DB': 'MediumPurple',
+            '#9400D3': 'DarkViolet',
+            '#98FB98': 'PaleGreen',
+            '#9932CC': 'DarkOrchid',
+            '#9ACD32': 'YellowGreen',
+            '#A0522D': 'Sienna',
+            '#A52A2A': 'Brown',
+            '#A9A9A9': 'DarkGray',
+            '#A9A9A9': 'DarkGrey',
+            '#ADD8E6': 'LightBlue',
+            '#ADFF2F': 'GreenYellow',
+            '#AFEEEE': 'PaleTurquoise',
+            '#B0C4DE': 'LightSteelBlue',
+            '#B0E0E6': 'PowderBlue',
+            '#B22222': 'FireBrick',
+            '#B8860B': 'DarkGoldenRod',
+            '#BA55D3': 'MediumOrchid',
+            '#BC8F8F': 'RosyBrown',
+            '#BDB76B': 'DarkKhaki',
+            '#C0C0C0': 'Silver',
+            '#C71585': 'MediumVioletRed',
+            '#CD5C5C': 'IndianRed',
+            '#CD853F': 'Peru',
+            '#D2691E': 'Chocolate',
+            '#D2B48C': 'Tan',
+            '#D3D3D3': 'LightGray',
+            '#D3D3D3': 'LightGrey',
+            '#D8BFD8': 'Thistle',
+            '#DA70D6': 'Orchid',
+            '#DAA520': 'GoldenRod',
+            '#DB7093': 'PaleVioletRed',
+            '#DC143C': 'Crimson',
+            '#DCDCDC': 'Gainsboro',
+            '#DDA0DD': 'Plum',
+            '#DEB887': 'BurlyWood',
+            '#E0FFFF': 'LightCyan',
+            '#E6E6FA': 'Lavender',
+            '#E9967A': 'DarkSalmon',
+            '#EE82EE': 'Violet',
+            '#EEE8AA': 'PaleGoldenRod',
+            '#F08080': 'LightCoral',
+            '#F0E68C': 'Khaki',
+            '#F0F8FF': 'AliceBlue',
+            '#F0FFF0': 'HoneyDew',
+            '#F0FFFF': 'Azure',
+            '#F4A460': 'SandyBrown',
+            '#F5DEB3': 'Wheat',
+            '#F5F5DC': 'Beige',
+            '#F5F5F5': 'WhiteSmoke',
+            '#F5FFFA': 'MintCream',
+            '#F8F8FF': 'GhostWhite',
+            '#FA8072': 'Salmon',
+            '#FAEBD7': 'AntiqueWhite',
+            '#FAF0E6': 'Linen',
+            '#FAFAD2': 'LightGoldenRodYellow',
+            '#FDF5E6': 'OldLace',
+            '#FF0000': 'Red',
+            '#FF00FF': 'Fuchsia',
+            '#FF00FF': 'Magenta',
+            '#FF1493': 'DeepPink',
+            '#FF4500': 'OrangeRed',
+            '#FF6347': 'Tomato',
+            '#FF69B4': 'HotPink',
+            '#FF7F50': 'Coral',
+            '#FF8C00': 'DarkOrange',
+            '#FFA07A': 'LightSalmon',
+            '#FFA500': 'Orange',
+            '#FFB6C1': 'LightPink',
+            '#FFC0CB': 'Pink',
+            '#FFD700': 'Gold',
+            '#FFDAB9': 'PeachPuff',
+            '#FFDEAD': 'NavajoWhite',
+            '#FFE4B5': 'Moccasin',
+            '#FFE4C4': 'Bisque',
+            '#FFE4E1': 'MistyRose',
+            '#FFEBCD': 'BlanchedAlmond',
+            '#FFEFD5': 'PapayaWhip',
+            '#FFF0F5': 'LavenderBlush',
+            '#FFF5EE': 'SeaShell',
+            '#FFF8DC': 'Cornsilk',
+            '#FFFACD': 'LemonChiffon',
+            '#FFFAF0': 'FloralWhite',
+            '#FFFAFA': 'Snow',
+            '#FFFF00': 'Yellow',
+            '#FFFFE0': 'LightYellow',
+            '#FFFFF0': 'Ivory',
+            '#FFFFFF': 'White'
+        };
+    
+//  Iniitalize a list of boring colors that will be used to encourage users to find better ones via radio button selection
+    const boring_colors = ["#C0C0C0","#D3D3D3","#FAEBD7","#808080","#F8F8FF","#FFF5EE","#708090","#FAF0E6","#A9A9A9","#FDF5E6","#778899","#FFFAF0"];
+
+//  Initialize a temp color array with boring colors for rendering; assignment is via the spread operator to ensure that they don't share
+//  locations in memory and remain separate
+    let temp_colors = [...boring_colors];
+
+//  This function is called by the main functions of Color Picker -- Color() and More_Color() -- to update the color wheel
+//  Specifically, it fills in the --colors parameter in the conic-section control within the .circle style element
+    function updateColors() {
+        const colorStops = generateColorStops(12);
+        document.documentElement.style.setProperty("--colors", colorStops);
+    }
+
+//  This function is called by updateColors to assign the contents of the temp_colors array to each of the wedges that
+//  make up the color wheel. Since there are twelve wedges, each one is rotated by 30 degrees from the other
+    function generateColorStops(numSegments) {
+        const colors = [];
+        const angleIncrement = 360 / numSegments;
+
+      for (let i = 0; i < numSegments; i++) {
+        const startAngle = i * angleIncrement;
+        const endAngle = (i + 1) * angleIncrement;
+        color = temp_colors[i];
+        colors.push(`${color} ${startAngle}deg ${endAngle}deg`);
+      }
+      return colors.join(", ");
+    }   
+
+//  This function is called whenever a random hex color code needs to be generated
+    function getRandomColor() {
+        const letters = "0123456789ABCDEF";
+        let rand_color = "#";
+        for (let i = 0; i < 6; i++) {
+            rand_color += letters[Math.floor(Math.random() * 16)];
+        }
+    return rand_color;
+    }
+
+//  This is the main function of the left-div of Color Picker
+//  It is called when the `Color It!` button is hit
+    function Color(){
+        
+        //  Initialize the display by resetting the radio buttons and its prompt 
+        //  Both are invisible on first load and thereafter are visible and so will need to be reset 
+        //  so that the user can pick a variation
+        document.getElementById("variation").reset();
+        document.getElementById("variation_prompt").innerHTML = "Pick a button to see what happens!";
+        
+        //  Initialize the color wheel with boring colors
+        temp_colors = [...boring_colors];
+        updateColors();
+
+        //  Set local variables that will store the input hex color code and control flag that 
+        //  indicates whether a good hex code has been received; this flag is reset when input validation finds errors
+        var colorcode = "#";
+        var good_hex = true;
+
+        //  Get the contents of the three input fields
+        var red = document.getElementById("red").value;
+        var green = document.getElementById("green").value;
+        var blue = document.getElementById("blue").value;
+
+        //  Check if there are valid hex digits, i.e. 0-9 and/or A-F, in the red input box
+        //  If they are valid concatenate the with the local variable building up a hex color code
+        if (/^[0-9A-Fa-f]{2}$/.test(red)){
+            document.getElementById("red").value = red.toUpperCase();
+            colorcode += red;
+        //  If they are not valid, prompt the user to provide valid input and reset the flag good_hex
+        } else {
+            document.getElementById("red").value = "Not Hex!"
+            good_hex = false;
+            document.getElementById("input_status_msg").innerHTML = "Please make sure entries for red, green and blue are TWO valid hex digits"
+        }
+
+        //  Do the same checks and flag management for the green input box
+        if (/^[0-9A-Fa-f]{2}$/.test(green)){
+            document.getElementById("green").value = green.toUpperCase();
+            colorcode += green;
+        } else {
+            document.getElementById("green").value = "Not Hex!"
+            good_hex = false;
+            document.getElementById("input_status_msg").innerHTML = "Please make sure entries for red, green and blue are TWO valid hex digits"
+        }
+        //  Do the same checks and flag management for the blue input box
+        if (/^[0-9A-Fa-f]{2}$/.test(blue)){
+            document.getElementById("blue").value = blue.toUpperCase();
+            colorcode += blue;
+            colorcode = colorcode.toUpperCase();
+        } else {
+            document.getElementById("blue").value = "Not Hex!"
+            good_hex = false;
+            document.getElementById("input_status_msg").innerHTML = "Please make sure entries for red, green and blue are TWO valid hex digits"
+        }
+
+        //  If input validation checks have passed, the good_hex flag remains set
+        //  Now we can act on the value of the local variable colorcode to add the chosen color to the color wheel
+        if (good_hex) {
+            
+            //  Check if the colorcode matches the list of known web colors
+            const colorName = knownWebColors[colorcode] ?? colorcode;
+            
+            //  If there isn't a match, print the hex code to as part of the status message in response to the user's input
+            if (knownWebColors[colorcode] === undefined) {
+                document.getElementById("input_status_msg").innerHTML = "The color you chose is " + colorcode;
+            
+                //  Otherwise, print the color name as part of the status message in response to the user's input
+            } else {
+                document.getElementById("input_status_msg").innerHTML = "The color you chose is " + colorName;
+            }
+            
+            //  Do a rudimentary check of proximity of the entered color to either black or white
+            //  If the entered hex code is too close to either black or white, get rid of the radio buttons
+            if (/FFFFF|00000/.test(colorcode)){
+                document.getElementById("variation").style.display = "none";
+                document.getElementById("variation_prompt").style.display = "none";
+                
+                //  Determine if the entered code is close to white or black to enter the right one in the right-div headline message
+                if (/FFFFF/.test(colorcode)){
+                    var edge = "White"
+                } else {
+                    var edge = "Black"
+                }
+                
+                //  Update the right-div topline message to inform the user that their color wheel will be filled with random colors
+                document.getElementById("right_div_top_msg").innerHTML = "OK, less boring...but, your color is too close to " + edge + ". So, here are nice set of colors to contrast with your choice!";
+                
+                //  Fill the color wheel with the initial color entered and 11 additional random colors
+                temp_colors[0] = colorcode;
+                for (i = 1; i < 12; i++){
+                    temp_colors[i] = getRandomColor();
+                }
+                updateColors();
+            
+            //  If the entered hex code is not close to the extremes of the color spectrum, update the right-div topline message
+            //  to encourage the user to take the next step by drawing their attention to the radio buttons below the color wheel
+            } else {
+                document.getElementById("right_div_top_msg").innerHTML = "OK, less boring...but, lets see what happens when you select one of the radio buttons below";
+                temp_colors[0] = colorcode;
+                updateColors();
+
+                //  Unhide the radio buttons if they have never been displayed or if they were hidden based on previous hex code color entry
+                document.getElementById("variation").style.display = "block";
+                document.getElementById("variation_prompt").style.display = "block";
+            }
+        //  If the good_hex flag has been reset, hide and reset the radio buttons
+        } else {
+            document.getElementById("variation").style.display = "none";
+            document.getElementById("variation_prompt").style.display = "none";
+            document.getElementById("variation").reset();
+
+            //  Updat the right-div topline message and redraw the boring color wheel
+            document.getElementById("right_div_top_msg").innerHTML = "Yawn...what a B-O-R-I-N-G color wheel";
+            temp_colors = [...boring_colors];
+            updateColors();
+        }
+    }
+
+
+
+    //  This function is called to determine if the first color is brighter than the second
+    //  It is called from the More_Color() function, which responds to a radio button selection
+    function isBrighter(color1, color2) {
+        const brightness1 = calculateBrightness(color1);
+        const brightness2 = calculateBrightness(color2);
+
+    return brightness1 > brightness2;
+    }
+
+    //  This function is called by the isBrighter function; it does the math to calculate brightness
+    function calculateBrightness(hex) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+    // Calculate brightness using the average of RGB components
+    return (r + g + b) / 3;
+    }
+
+//  This is the main function of the right-div; it handles radio button selection
+    function More_Color(){
+        
+        //  Get rid of the radio button prompt because a selection has been made
+        document.getElementById("variation_prompt").style.display = "none";
+
+        //  Determine which radio button was selected
+        const selectedValue = document.querySelector('input[name="options"]:checked').value;
+
+            //  Take action based on the value of the radio button selected
+            switch (selectedValue){
+                case "Brighter":                    
+                    //  Update the topline message to reflect the sunnier mood of the selection
+                    document.getElementById("right_div_top_msg").innerHTML = "Nicely done!";
+                    
+                    //  Start the temp_colors array index past the first color code
+                    i = 1;
+                    
+                    //  Generate a color code and check if its brighter than the first color in temp_colors
+                    //  If it is brighter, add it to the temp_colors array
+                    //  NOTE: This is where the rudimentary check of the entered hex color code can lead to 
+                    //  a long delay in filling the color wheel; this is because the random number generator
+                    //  needs to find values in the 2^24 bit color space. Sometimes a color code will cause
+                    //  the color wheel to turn all white.
+
+                    do {
+                        var rand_col = getRandomColor();
+
+                        if (isBrighter(rand_col,temp_colors[0])){
+                            temp_colors[i]=rand_col;
+                            i++;
+                        } 
+                    }
+                    while (i < 12);
+
+                    //  When we have 11 additional colors, update the color wheel with them
+                    updateColors();
+                    break;
+                
+                case "Darker":
+                    
+                    //  Update the topline message to reflect the darker mood of the selection
+                    document.getElementById("right_div_top_msg").innerHTML = "Winter is coming!";
+
+                    //  Start the temp_colors array index past the first color code
+                    i = 1;
+                    
+                    //  Generate a color code and check if its brighter than the first color in temp_colors
+                    //  If it is brighter, add it to the temp_colors array
+                    //  NOTE: This is where the rudimentary check of the entered hex color code can lead to 
+                    //  a long delay in filling the color wheel; this is because the random number generator
+                    //  needs to find values in the 2^24 bit color space. Sometimes a color code will cause
+                    //  the color wheel to turn all black.
+
+                    do {
+                        var rand_col = getRandomColor();
+                        if (!(isBrighter(rand_col,temp_colors[0]))){
+                            temp_colors[i]=rand_col;
+                            i++;
+                        } 
+                    }
+                    while (i < 12);
+
+                    //  When we have 11 additional colors, update the color wheel with them
+                    updateColors();
+                    break;
+                
+                case "Random":
+
+                    //  Update the topline message to reflect the crazy mood of the selection
+                    document.getElementById("right_div_top_msg").innerHTML = "Too much fun!";
+
+                    //  Generate 11 random color codes
+                    for (i = 1; i < 12; i++){
+                        temp_colors[i] = getRandomColor();
+                    }
+                    
+                    //  Update the color wheel
+                    updateColors();
+                    break;
+                
+                default:
+                    //  Just in case there is a scenario in which a radio button has not been selected
+                    document.getElementById("variation_prompt").innerHTML = "<strong>You didn't pick anything!</strong>";
+            }
+    }
+
+    //  Initialize on load
+    window.addEventListener('load', updateColors);
+
+    //  Allow the user to hit the Enter key to show the hex color code entered on the color wheel
+    document.addEventListener('keyup', function (event) {
+            // Check if the pressed key is 'Enter'
+            if (event.key === 'Enter') {
+            // Prevent the default behavior (form submission)
+            event.preventDefault();
+            // Trigger the form submission function
+            Color();
+        }
+    });
+</script>
+</body>
+</html>

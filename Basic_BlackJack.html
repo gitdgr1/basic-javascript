@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<!-- Basic BlackJack: A simple version of the game with basic cards and simple scoring -->
+<!-- On load, show player and dealer cards with an initial score for each -->
+<!-- The player can click Hit as many times as desired -->
+<!-- Once the player clicks Stay, their cards and totals are frozen -->
+<!-- Thereafter the user keeps hitting the Stay button until a win decision is made -->
+<!-- Once the result is shown the user is offered a replay -->
+
+<!-- Here is the pseudocode -->
+<!-- In this case, the big picture doesn't need much explanation because Blackjack is a well known game -->
+<!-- If the user doesn't know how to play Blackjack, clicking thru the buttons a few times will help them -->
+<!-- to catch on quickly -->
+
+<!-- 1) Initialize the game by showing a card each for the dealer and the player -->
+<!-- 2) Show score totals for the dealer and the player -->
+<!-- 3) When the user clicks on the "Hit" button, generate a new card and score for the player's deck only -->
+<!-- 4) When the user decides they no longer want to draw cards, they click "Stay" -->
+<!-- 5) When the user clicks "Stay" generate a new card and score for the dealer's deck only -->
+<!-- 6) Keep clicking "Stay" until the dealer has a total of 17 or greater -->
+<!-- 7) Each time a card is genarated and the scores are updated, check win conditions -->
+<!-- 8) As soon as a win condition is detected, disable both Hit and Stay keys and present the win decision -->
+<!-- 9) Print out win message and offer a replay -->
+
+<!-- There are many, many future expansions possible -->
+<!-- Future expansion - How can this be done differently or better using Svelte? -->
+<!-- Future expansion - Show all cards drawn -->
+<!-- Future expansion - Add hidden card for dealer deck -->
+<!-- Future expansion - Handle Ace rescoring for both player and dealer -->
+<!-- Future expansion - Automate Stay button reclicks until win condition is met -->
+<!-- Furure expansion - Use pre-generated card images -->
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+/* Setup styles for body to control overall color and page layout, orientation */
+    body {
+        background-color: darkslategrey;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: Arial, Helvetica, sans-serif;
+        color:aliceblue;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        flex-direction: column;
+    }
+
+/* Style h1, h2 and p tags */
+    h1 {
+            color:darkorange;
+            margin-bottom: 10px;
+    }
+    h2 {
+            color:salmon;
+            line-height: 2.0;
+    }
+    p  {
+            color:goldenrod; 
+            line-height: 1.6;
+    }
+
+/* Setup custom divs to solve alignment issues for cards and text and emojis in card rectangle */
+    .deck {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+/* Card object visual representaton */
+    .rounded-rectangle {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      width: 125px;
+      height: 175px;
+      text-align:center;
+      background-color: maroon;
+      border: 10px solid white;
+      border-radius: 10px; 
+      color: white;
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+/* Experimentation with controls to ensure that face value and suite of cards display properly
+   The following controls for the rounded rectangle didn't help but want to keep them around 
+   as a reminder for the future
+        align-items: center;
+        justify-content: center;
+        line-height: 175px; /* Center content vertically 
+*/
+
+
+/* Needed a button container to allow for centered display of buttons */    
+    .button-container {
+      display: flex;
+      justify-content: center;
+      width: 125px;
+      margin-top: 30px;
+    }
+
+/* Custom button styling to allow control of size of button and size of text in button */
+    .custom-button {
+        width: 48%;
+        font-size: 15px;
+        margin-left:10px;
+    }
+
+/* Specific styling for the separator between the dealer and player decks */
+    .separator {
+      width: 100%;
+      height: 10px;
+      background-color: green;
+      margin-bottom: 20px;
+    }
+
+/* Custom styling for the a-tag that will hold an inline button that will show up to permit replay */
+    a {
+      color: white;
+      background-color: black;
+      text-decoration: none;
+      border: 1px solid white;
+      padding: 5px 10px;
+      cursor: pointer;
+      display: none; /* Initially hide the button */
+    }
+
+</style>
+</head>
+
+<body>
+    
+<!-- Top of page text to set the context, and later, to place the win and replay messages -->
+    <h1 id="title_msg">Let's Play "No Cards, All Math" Blackjack!!!</h1>
+        <p id="replay_msg">
+          <strong>
+            <a id="playAgainButton" onclick="location.reload()">Play Again?</a>
+          </strong>
+        </p>
+
+<!-- Dealer score area above dealer deck -->
+        <h2 id="dealer_msg"><strong>Dealer Score:</strong><span id="dealer_score">0</span></h2>
+
+<!-- Dealer deck and span-tag for dynamic inline suite emoji -->
+    <div class="deck">
+        <div class="rounded-rectangle" id="dealer_cards">
+            <strong id="dealer_face" style="margin-right: 5px">5</strong>
+            <span id="dealer_suite">&#x2665</span><!-- Heart (♥) -->
+        </div>
+
+<!-- Separator div with styling control to override body styling -->        
+        <div class="separator"></div>
+
+<!-- Player deck and span-tag for dynamic inline suite emoji -->
+        <div class="rounded-rectangle" id="your_cards">
+            <strong id="your_face" style="margin-right: 5px">A</strong>
+            <span id="your_suite">&#x2665</span><!-- Heart (♥) -->
+        </div>
+        
+<!-- Player score area below player deck -->
+        <h2 id="your_msg"><strong>Your Score:</strong><span id="your_score">0</span></h2>
+
+<!-- Hit and Stay buttons with custom container to control positining and id's for disabling on win -->
+        <div class="button-container">
+            <button class="custom-button" id="hit" onclick="update(`your`)">Hit</button>
+            <button class="custom-button" id="stay" onclick="update(`dealer`)">Stay</button>
+        </div>
+    </div>
+
+    <script>
+// Global variables
+        var yourScore = 0;
+        var dealerScore = 0;
+        var message = "";
+// Flow control flags
+        var loadinit = false;
+        var nohit = false;
+        var winDecision = false;
+
+        
+// Initialization calls to main function on initial load or page reload
+        window.addEventListener('load', justLoaded(), update(`dealer`), update(`your`));
+
+// Top level or main (for old fashioned folks) function
+// This is called on initialization and every time the Hit or Stay buttons are clicked
+// It takes in a parameter that identifies which button was clicked
+          function update (whose) {
+// This path handles player card draw and score 
+            if ((whose === "your") && (!(nohit))){
+                  updateCard (whose);
+                  updateScore(whose);
+                  console.log (whose, dealerScore, yourScore);
+                  winCheck(); 
+                }
+// This path handles dealer card draw and score
+// The control flag loadinit is initially false, set true on load 
+// and reset to false the first time this function is called
+// This behavior allows re-use of the function during initialization
+            else {
+                      if (!(loadinit)) {nohit = true;}
+                      if (dealerScore < 17) {
+                            loadinit = false;
+                            updateCard (whose);
+                            updateScore(whose);
+                            winCheck();
+                          }
+                  }
+          }        
+// Without the loadinit control flag, the nohit flag would be set to true on load
+// which would prevent a user click on Hit from making any changes, guaranteeing a loss each time
+
+// --------------------Support Function To Set Initial Load Control Flag------------------------------ //
+                                       
+// This function is called by the load event listener
+// It sets the loadinit flag true to allow the update function to 
+// distinguish the init pass from the rest of the passes thru it       
+        function justLoaded () {
+          loadinit = true;
+        }
+
+// --------------------------Support Function To Check Win Conditions--------------------------------- //
+
+// This function checks whether a win condition has been triggered
+// It is called after every card draw and score tally
+
+        function winCheck() {
+// There are five possible win conditions; the first two are explicit
+// because either the player or the dealer bust by pulling cards that exceed 21
+          if (yourScore > 21) {
+              message = "You Lose!"
+              winDecision = true;
+          } else if (dealerScore > 21){
+              message = "You Win!"
+              winDecision = true;
+// The remaining three win conditions occur when the dealer has a score of 17 or greater
+// The nohit control flag is critical to ensuring that win conditions aren't triggered prematurely
+          } else if ((yourScore == dealerScore) && (dealerScore >= 17) && (nohit)){
+              message = "Tie!"
+              winDecision = true;
+          } else if ((yourScore < dealerScore) && (dealerScore >= 17) && (nohit)){
+              message = "You Lose!"
+              winDecision = true;
+          } else if ((yourScore > dealerScore) && (dealerScore >= 17) && (nohit)){
+              message = "You Win!"
+              winDecision = true;
+          }
+
+// This portion of the winCheck function implements the results of a win condition being triggered
+          if (winDecision){
+// First, both Hit and Stay buttons are explicitly disabled to provide a visual cue that the game is over
+// The buttons are already disabled due to their active code paths being invalidated at the right time
+            document.getElementById("hit").disabled = true;
+            document.getElementById("stay").disabled = true;
+// Next, the win decision is communicated in the title message and a "Play Again" inline button is shown
+            document.getElementById("title_msg").innerHTML = message;
+            document.getElementById("playAgainButton").style.display = "inline";
+            document.getElementById("playAgainButton").focus();
+// This code just allows the user to hit Enter rather than have to click on the inline button
+            document.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                  document.getElementById("playAgainButton").click();
+                }
+            });
+          }
+        }
+// Clicking on the "Play Again" button reloads the page and restarts the game
+
+// -----------------------------Support Function To Update Scores------------------------------------- //
+
+// This function updates the score for both the player and the dealer
+// It is passed a parameter that allows it to determine whose score it is updating
+// The use of global variables to keep track of player and dealer scores makes code reuse easier
+        function updateScore(whose) {
+// A local variable is used to determine the score for each card
+          var Score = 0;
+// This code constructs the right document element to pull the face value from
+            const faceValue = document.getElementById(`${whose}_face`);
+// If the face value is a letter, and an Ace the local variable Score is set to 11, else its set to 10
+            if (isNaN(faceValue.textContent)){
+                  if (faceValue.textContent === "A"){
+                      Score = 11;
+                  } else {
+                      Score = 10;
+                  }
+// If the face value is a number, the local variable Score is set to the numerical value of the string
+              } else {
+              Score = Number(faceValue.textContent)
+            }
+// Now, depending on the value passed in, the right entity's score is tallied using global variables
+// There is probably a way to make this code even more concise using variable substitution but copy/paste
+// seemed a lot easier for debug 
+            if (whose === "your"){
+              yourScore += Score;
+              const yourScoreElement = document.getElementById("your_score");
+              yourScoreElement.textContent = yourScore;
+            } else {
+              dealerScore += Score;
+              const dealerScoreElement = document.getElementById("dealer_score");
+              dealerScoreElement.textContent = dealerScore;
+            }
+        }
+
+//
+
+// -----------------------------Support Function To Update Cards-------------------------------------- //
+
+
+// This function generates a random number to index into either the face value or suite type arrays
+// It is passed a parameter that it uses to set the appropriate array length to set the bounds of the 
+// random number. The multiplication by 100 is to allow a larger range for randomness than the actual
+// array lengths. Its effect on the degree of pseudorandomness might be purely psychological, though
+// it did appear to improve the variance of cards generated
+        function getRandomElement(arr) {
+          const randomIndex = Math.floor((Math.random() * 100) % arr.length);
+          return arr[randomIndex];
+        }
+
+// This function updates the card for both the player and dealer
+// It is passed a parameter that it uses to get the appropriate document elements to update
+// It also changes the card color to match the suite selected by the random card picker
+
+        function updateCard(whose) {
+          const faceElement = document.getElementById(`${whose}_face`);
+          const suiteElement = document.getElementById(`${whose}_suite`);
+          const cardElement = document.getElementById(`${whose}_cards`);
+    
+        // Define suites and letters
+          const suites = ['&#x2665', '&#x2666', '&#x2663', '&#x2660']; // Hearts, Diamonds, Clubs, Spades
+          const faces = ['2', '3', '4', '5', '6', '7', '8', '9', 'J', 'Q', 'K', 'A'];
+    
+        // Update letter and suite content
+          const randomFace = getRandomElement(faces);
+          const randomSuite = getRandomElement(suites);
+
+          faceElement.textContent = randomFace;
+          suiteElement.innerHTML = randomSuite;
+
+        // Set color based on suite
+          if (randomSuite === '&#x2663' || randomSuite === '&#x2660') {
+                cardElement.style.backgroundColor = 'black';
+                cardElement.style.color = 'white';
+          } else {
+                cardElement.style.backgroundColor = 'maroon';
+                cardElement.style.color = 'white';
+          }
+
+        }
+
+
+      </script>
+</body>
+</html>

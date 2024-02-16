@@ -1,0 +1,97 @@
+<!-- JavaScript Mad Lib: Using Forms to get inputs for Mad Libs with output composition -->
+
+<!-- 1) Create a series of forms using the <form> tag in the body section-->
+<!-- 2) The forms collect user inputs in many text boxes and offers a "Generate Mad Lib!" button -->
+<!-- 3) The button calls reveal() once it is clicked using the onClick event handler -->
+<!-- 4) The user input is printed on the web page using progressive growth of output to print the Madlib via an innerHTML replacment-->
+<!-- 5) If the user hits "Enter" instead of clicking the button, an EventListener calls reveal() -->
+
+<html>
+    <head>
+        <title> JavaScript Mad Lib </title>
+        <style>
+            body{
+                background-color: darkslategrey;
+                font-family: Arial, Helvetica, sans-serif;
+                color:aliceblue;
+                margin-top:25vh;
+                text-align:center;
+            }
+            h1{
+                color:darkorange;
+            }
+            p{
+                color:goldenrod; 
+                line-height: 1.6;
+            }
+        </style>
+        <script language = "JavaScript">
+            function reveal(){
+                var TransportNoun = document.theForm.elements[0].value
+                var MoodAdjective = document.theForm.elements[1].value
+                var PluralNoun = document.theForm.elements[2].value
+                var ObjectNoun = document.theForm.elements[3].value
+                var Drawing = document.theForm.elements[4].value
+                var Yell = document.theForm.elements[5].value
+                var HalloweenAdj = document.theForm.elements[6].value
+                var BodyParts = document.theForm.elements[7].value
+                var BasicNoun = document.theForm.elements[8].value
+                var FoodAdj = document.theForm.elements[9].value
+                
+                output = "The day started out as usual. I hopped on my " + TransportNoun 
+                output = output + " and set off on the Burke-Gilman Trail to work. The activity along Lake Union was eerily " + MoodAdjective
+                output = output + ". Distracted by banana peels and " + PluralNoun
+                output = output + " strewn along the path near Canal Street, I rode straight into a massive " + ObjectNoun
+                output = output + " and flew over the handlebars. As I sat there dazed, I realized the " + Drawing
+                output = output + " was actually a giant footprint. Suddenly, I heard something cry, " + Yell + "!!!"
+                output = output + " I turned to see a giant ape-like creature with " + HalloweenAdj + " " + BodyParts
+                output = output + " trying to hide behind a " + BasicNoun
+                output = output + ". I could smell its " + FoodAdj + " breath from 10 yards away."
+                output = output + " It dove into the canal before I could snap a photo. Who knew Sasquatch could swim?!"
+
+                document.getElementById("magic").innerHTML=output;
+            }
+        </script>
+    </head>
+    <body>
+        <form name="theForm">
+            <h1>Let's have some fun!!!</h1></BR></BR>
+            
+            Transport-related Noun
+            <input type="text"></BR></BR>
+            Mood-related Adjective
+            <input type="text"></BR></BR>
+            Plural Noun
+            <input type="text"></BR></BR>
+            Object-related Noun
+            <input type="text"></BR></BR>
+            Something you'd like to draw
+            <input type="text"></BR></BR>
+            Something you'd love to yell out loud
+            <input type="text"></BR></BR>
+            Halloween-related Adjective
+            <input type="text"></BR></BR>
+            Plural Body Part
+            <input type="text"></BR></BR>
+            Noun
+            <input type="text"></BR></BR>
+            Food-related Adjective
+            <input type="text" id="userinput"></BR></BR>
+            
+            <input type="button" value="Generate Mad Lib!" onClick="reveal()">
+            <p id="magic"></p>
+        </form>
+        <script>
+            document.getElementById('userinput').addEventListener('keydown', function (event) {
+            // Check if the pressed key is 'Enter'
+            if (event.key === 'Enter') {
+                // Prevent the default behavior (form submission)
+                event.preventDefault();
+                // Trigger the form submission function
+                reveal();
+            }
+        });
+        </script>
+    </body>
+</html>    
+

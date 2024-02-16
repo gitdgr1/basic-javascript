@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!-- Four Function Calculator: Add, Subtract, Multiply, or Divide two numbers -->
+<!-- User inputs two numbers (operands) and a single operation and gets back the result -->
+
+<!-- Here is the pseudocode -->
+<!-- Explain the big picture to the user: three boxes below, first and third are for numbers, second is for function -->
+<!-- Under each box will be the response to their input based on input validation; no response means inputs passed validation -->
+<!-- Do input validation and loop on user input until valid -->
+<!-- There will be a single button, labeled "Calc". As before, support "Enter" in addition to button click -->
+<!-- Add support for tab movement between input boxes -->
+<!-- There will be a single results message under the button - it will not be visible unless the inputs pass validation -->
+
+<!-- Future expansion - Support free-form input of expressions -->
+<!-- Future expansion - Expand support to include more operators -->
+<!-- Future expansion - How can this be done differently or better using Svelte? -->
+<html>
+<body>
+
+<h1>Let's do some Basic Math!</h1>
+
+<h2>In the three boxes below, enter a number, a function (+, -, *, /, %, **) and another number</h2>
+
+<style>
+        body{
+            background-color: darkslategrey;
+            font-family: Arial, Helvetica, sans-serif;
+            color:aliceblue;
+            margin-top:25vh;
+            text-align:center;
+        }
+        h1{
+            color:darkorange;
+            line-height: 2.0;
+        }
+        h2{
+            color:salmon;
+            line-height: 1.6;
+        }
+        p{
+            color:goldenrod; 
+            line-height: 1.6;
+        }
+
+    .container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+    }
+    .side-by-side {
+        display:inline-table;
+        align-items:safe;
+        margin-right: 0px;
+        margin-left: 0px;
+        height: 100px;
+    }
+    .custom-input {
+        width: 50px;
+        height: 20px;
+    }
+    .response-text {
+        max-width: 200px;
+        word-wrap: break-word;
+    }
+
+    button {
+        margin-top: 10px;
+    }
+</style>
+
+<script>
+    function Calc() {
+        var op1=document.getElementById("op1").value;
+        var operator=document.getElementById("operator").value;
+        var op2=document.getElementById("op2").value;
+        var result = 0;
+
+        if (isNaN(Number(op1)) || isNaN(Number(op2))) {document.getElementById("calc_result").innerHTML="Ok, c'mon - one of those isn't a number..."}
+        else {
+                switch (operator) {
+                    case "+":
+                        result = Number(op1) + Number(op2);
+                        break;
+                    case "-":
+                        result = Number(op1) - Number(op2);
+                        break;
+                    case "*":
+                        result = Number(op1) * Number(op2);
+                        break;
+                    case "/":
+                        result = Number(op1) / Number(op2);
+                        break;
+                    case "%":
+                        result = Number(op1) % Number(op2);
+                        break;
+                    case "**":
+                        result = Number(op1) ** Number(op2);
+                        break; 
+                    default:
+                        result = "Bad operator!"
+                }
+            
+            document.getElementById("calc_result").innerHTML= result;}
+    }
+</script>
+
+<div class="container">
+
+    <div class="side-by-side">
+        <label for="op1"><p>Please enter a number</p></label>
+        <input type="text" id="op1" class="custom-input" tabindex="1"><BR><BR>
+        <p id="op1_resp" class="response-text"></p>
+    </div>
+
+    <div class="side-by-side">
+        <label for="operator"><p>Please enter a function</p></label>
+        <input type="text" id="operator" class="custom-input" tabindex="2"><BR><BR>
+        <p id="operator_resp" class="response-text"></p>
+    </div>
+
+    <div class="side-by-side">
+        <label for="op2"><p>Please enter a number</p></label>
+        <input type="text" id="op2" class="custom-input" tabindex="3"><BR><BR>
+        <p id="op2_resp" class="response-text"></p>
+    </div>
+</div>
+
+<!-- <input type="button" value="Calculate!" onClick="Calc()"> -->
+<button id="go_calc" onclick="Calc()" tabindex="4">Calculate!</button>
+
+<p id="calc_result"></p>
+
+<script>
+    const blank_txt = "";
+    document.getElementById("op1").innerHTML= blank_txt;
+    document.getElementById("operator").innerHTML= blank_txt;
+    document.getElementById("op2").innerHTML= blank_txt;
+    document.getElementById("calc_result").innerHTML= blank_txt;
+
+    document.getElementById("op2").addEventListener('keydown', function (event) {
+            // Check if the pressed key is 'Enter'
+            if (event.key === 'Enter') {
+            // Prevent the default behavior (form submission)
+            event.preventDefault();
+            // Trigger the form submission function
+            Calc();
+        }
+            });
+    document.addEventListener('keyup', function (event) {
+            // Check if the pressed key is 'Enter'
+            if (event.key === 'Enter') {
+            // Prevent the default behavior (form submission)
+            event.preventDefault();
+            // Trigger the form submission function
+            Calc();
+        }
+    });
+</script>
+
+</body>
+</html>
+

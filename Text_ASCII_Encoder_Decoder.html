@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!-- Encoder + Decoder: Converting strings to ASCII codes and vice-versa -->
+<!-- User inputs text and gets back ASCII codes for each letter -->
+<!-- User inputs ASCII codes for printable characters and gets back text -->
+
+<!-- Here is the pseudocode -->
+<!-- Explain the big picture to the user: two boxes below, one for text, other for numbers -->
+<!-- Under each box will be the response to their input -->
+<!-- If text entered, get ASCII codes back. If ASCII codes entered, get text back. If invalid input, redo -->
+<!-- Do input validation and loop on user input until valid -->
+<!-- Start with buttons for each input box. As before, support "Enter" in addition to button click -->
+<!-- Encode text into ASCII array and display. Decode ASCII array into text and display. -->
+
+<!-- Future expansion - Add tab support to move between boxes -->
+<!-- Future expansion - How can this be done differently or better using Svelte? -->
+<html>
+<html lang="en">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<body>
+
+<h1>Let's play with Text and ASCII codes!</h1>
+
+<h2>In the box on the left below, enter text. In the box on the right enter numbers between 32 and 126, separated by commas</h2>
+
+<style>
+        body{
+            background-color: darkslategrey;
+            font-family: Arial, Helvetica, sans-serif;
+            color:aliceblue;
+            margin-top:25vh;
+            text-align:center;
+        }
+        h1{
+            color:darkorange;
+            line-height: 2.0;
+        }
+        h2{
+            color:salmon;
+            line-height: 1.6;
+        }
+        p{
+            color:goldenrod; 
+            line-height: 1.6;
+        }
+</style>
+<style>
+    .side-by-side {
+        display:inline-table;
+        align-items:safe;
+        margin-right: 200px;
+        margin-left: 200px;
+        height: 800px;
+    }
+    .custom-input {
+        width: 200px;
+        height: 20px;
+    }
+    .response-text {
+        max-width: 200px;
+        word-wrap: break-word;
+    }
+</style>
+
+<script>
+    function TextToASCII(){
+        var make_ascii="";
+        const ascii_list=[];
+
+        make_ascii=document.getElementById("input1").value;
+        for (i = 0; i < make_ascii.length; i++){
+            ascii_list.push(make_ascii.charCodeAt(i));
+        }
+        if (make_ascii.length > 0) {document.getElementById("l1_txt").innerHTML=ascii_list;}
+        else {document.getElementById("l1_txt").innerHTML="Your ASCII codes will show up here";}
+    }
+    function ASCIIToText(){
+        var get_ascii="";
+        var bad_ascii = false;
+        var final_text = "";
+
+        get_ascii = document.getElementById("input2").value;
+        
+        var only_nums = /^(\d+\s*,\s*)*\d+$/.test(get_ascii.trim());
+                    if (only_nums){
+                    var text_array = get_ascii.split(',').map(function(item){
+                    return Number(item.trim());
+                    });
+                    
+                    for (j = 0; j < text_array.length; j++){
+                    if (!((text_array[j]<32) || (text_array[j]>126))) {
+                        final_text += String.fromCharCode(text_array[j]);
+                    } else {
+                        bad_ascii = true;
+                        document.getElementById("l2_txt").innerHTML="Please enter numbers between 32 and 126, separated by commas";
+                        }                    
+                    }
+                    if (!bad_ascii) {
+                        document.getElementById("l2_txt").innerHTML=final_text;
+                    }
+                    } else if (get_ascii.length > 0){
+                        document.getElementById("l2_txt").innerHTML="Please enter a list of numbers separated by commas";
+                        } else {
+                            document.getElementById("l2_txt").innerHTML="Your text will show up here";
+                        }
+    }
+</script>
+
+<div class="side-by-side">
+    <label for="input1"><p>Please enter text</p></label>
+    <input type="text" id="input1" class="custom-input"><BR><BR>
+    <input type="button" value="Submit" onClick="TextToASCII()">
+    <p id="l1_txt" class="response-text"></p>
+</div>
+
+<div class="side-by-side">
+    <label for="input2"><p>Please enter numbers</p></label>
+    <input type="text" id="input2" class="custom-input"><BR><BR>
+    <input type="button" value="Submit" onClick="ASCIIToText()">
+    <p id="l2_txt" class="response-text"></p>
+</div>
+
+
+<script>
+    document.getElementById("l1_txt").innerHTML="Your ASCII codes will show up here";
+    document.getElementById("l2_txt").innerHTML="Your text will show up here";
+
+    document.getElementById('input1').addEventListener('keydown', function (event) {
+                // Check if the pressed key is 'Enter'
+                if (event.key === 'Enter') {
+                    // Prevent the default behavior (form submission)
+                    event.preventDefault();
+                    // Trigger the form submission function
+                    TextToASCII();
+                }
+            });
+    document.getElementById('input2').addEventListener('keydown', function (event) {
+                // Check if the pressed key is 'Enter'
+                if (event.key === 'Enter') {
+                    // Prevent the default behavior (form submission)
+                    event.preventDefault();
+                    // Trigger the form submission function
+                    ASCIIToText();
+                }
+            });
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!-- Prime Number Detector: Determine if a number between 1 and 1000 is prime -->
+<!-- User inputs a number and the program responds with Prime or Not Prime -->
+
+<!-- Here is the pseudocode -->
+<!-- Explain the big picture to the user: enter a number and find out if it is prime -->
+<!-- Under the single data entry box will be the response to the input based on input validation -->
+<!-- Do input validation and loop on user input until valid; vary response according to corrective action required -->
+<!-- Continue with input validation and responses based on input with the goal of conditioning userinput -->
+<!-- NOT REQUIRED: On valid input above 5000, update response to say "Working..." -->
+<!-- There will be a single button, labeled "Prime?". As before, support "Enter" in addition to button click -->
+
+<!-- Future expansion - More efficient algorithm for very large numbers -->
+<!-- Future expansion - How can this be done differently or better using Svelte? -->
+<html>
+<body>
+
+<h1>Prime, Not Prime and One and Two, Oh My!</h1>
+
+<h2 id="maxSafeInteger">In the box below, enter a number between 1 and </h2>
+<script>
+    var h2Element = document.getElementById("maxSafeInteger");
+    h2Element.innerHTML += BigInt(Number.MAX_SAFE_INTEGER).toLocaleString() + " and find out if its Prime or Not Prime!";
+</script>
+
+<style>
+        body{
+            background-color: darkslategrey;
+            font-family: Arial, Helvetica, sans-serif;
+            color:aliceblue;
+            margin-top:25vh;
+            text-align:center;
+        }
+        h1{
+            color:darkorange;
+            line-height: 2.0;
+        }
+        h2{
+            color:salmon;
+            line-height: 1.6;
+        }
+        p{
+            color:goldenrod; 
+            line-height: 1.6;
+        }
+
+        #status_msg {
+            font-size: 25px;
+        }
+
+        input {
+            font-size: 20px; 
+        }
+
+        button {
+            font-size: 20px;
+            margin-top: 10px;
+        }
+</style>
+
+<script>
+    function numWithCommas() {
+        var num_entered = document.getElementById("userinput").value;
+        if (!(/,/.test(num_entered))){
+            document.getElementById("userinput").value = BigInt(num_entered).toLocaleString();
+        } else {
+            document.getElementById("userinput").value = num_entered;
+        }
+    }
+
+    function Prime_Or_Not(){
+    null_msg = "";
+    document.getElementById("status_msg").innerHTML = null_msg;
+
+//  This code checks if userinput consists of a pattern of three digits separated by commas
+//  or a total of four digits with a comma after the most significant digit
+//  If so, it strips all commas for further processing
+//  If not, userinput is not modified    
+    var num_in = document.getElementById("userinput").value;
+    if (/,(?:\d{3},)+/.test(num_in) || (/^(\d{1},\d{3})$/)) {
+            num_in = num_in.replace(/,/g, "");
+    }
+//  This code checks if userinput is a null string
+//  If it is, it prompts the user to enter something
+    if (num_in.length == 0) {
+        document.getElementById("status_msg").innerHTML = "Please enter something";
+
+//  This code checks is userinput is not a number
+//  If it not, it prompts the user to enter a number
+    } else if (isNaN(num_in)){
+        document.getElementById("status_msg").innerHTML = "Please enter a number";
+    }
+
+//  This code checks if userinput is negative or a decimal
+//  In either case, it converts userinput into a positive integer
+//  and asks the user to hit Enter to check if its a prime
+    else if ((Number(num_in) < 0) || (/\./.test(num_in))){
+        num_in = Math.floor(Math.abs(Number(num_in)));
+        document.getElementById("userinput").value = num_in;
+        document.getElementById("status_msg").innerHTML = "Your entry is now a positive integer. Hit Enter to check if its a Prime!"
+    }
+
+//  This code checks if userinput is too large for the Number function
+//  If it is too large, the user is prompted to enter a smaller number
+    else if (BigInt(num_in) > BigInt(Number.MAX_SAFE_INTEGER)) {
+        numWithCommas();
+        document.getElementById("status_msg").innerHTML = "Whoa! Easy Now! That number is CRAZY BIG! Take it down a notch :)";
+    }
+
+//  This code checks if userinput is zero and deals with it as the special case
+//  that it is in a special status message
+    else if (num_in == "0"){
+        document.getElementById("status_msg").innerHTML = "Well played! Zero is neither Prime nor Composite :)";
+    }
+
+//  This code checks if userinput is 1
+//  If it is, it is called out as Not Prime with an explanation
+    else if (num_in == "1"){
+        document.getElementById("status_msg").innerHTML = "Tricky, tricky! One is Not Prime! It does not have two unique factors!"
+    }
+
+//  This code checks if userinput is 2 or 3
+//  If it is, these are called out as Prime
+    else if ((num_in == "2") || (num_in =="3")){
+        document.getElementById("status_msg").innerHTML = "Prime!";
+    } 
+
+//  This code checks for even numbers
+//  If userinput is even, it is called out as Not Prime
+    else if (!(Number(num_in)%2)){
+        numWithCommas();
+        document.getElementById("status_msg").innerHTML = "Its Even - Therefore - Not Prime!";
+    }
+
+//  This code starts with an odd number and walks thru all possible odd divisors starting with 3
+//  When it finds a divisor, it sets the prime_flag to false and prints out the divisor along with
+//  a Not Prime declaration. 
+
+//  Everytime the for loop does not find a divisor, it sets the prime_flag to true
+//  If it cannot find a divisor by the time it gets to the integer less than the square root of 
+//  the number entered, then the number entered is Prime
+    else {
+        numWithCommas();
+        var limit = Math.floor(Math.sqrt(Number(num_in)));
+        for (i = 1; i < limit; i++){
+            if (!(Number(num_in)%(2*i + 1))) {
+                var prime_flag = false;
+                document.getElementById("status_msg").innerHTML = "Not Prime! Divisible by " + (2*i +1);
+                break;
+            } else {
+                prime_flag = true;
+            }
+        }
+        if (prime_flag) {
+            document.getElementById("status_msg").innerHTML = "Prime!";
+        }
+    }
+}
+</script>
+
+<form name="number">
+    <input type="text" style="height:25px; text-align:right;" id="userinput" maxlength="21"><BR><BR>
+    <input type="button" value="Prime?" onClick="Prime_Or_Not()">
+</form>
+<p id="status_msg"></p>
+
+<script>
+document.getElementById("userinput").addEventListener('keydown', function (event) {
+    // Check if the pressed key is 'Enter'
+    if (event.key === 'Enter') {
+    // Prevent the default behavior (form submission)
+    event.preventDefault();
+    // Trigger the form submission function
+    Prime_Or_Not();
+}
+    });
+</script>
+</body>
+</html>

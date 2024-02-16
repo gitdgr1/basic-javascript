@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!-- Let's Make a Deal: Using the <select> tag and -->
+<!-- If-Else-If conditionals for flow control -->
+
+<!-- Here is the pseudocode -->
+<!-- Set the stage: Title and Game Summary -->
+<!-- Offer players a pick list of Doors 1, 2 and 3 -->
+<!-- Evaluate their selection -->
+<!-- Based on their selection tell them the prizes they've won -->
+<!-- Allow for repeat selection of doors and terminate the game after 10 selections -->
+
+<html>
+
+<body>
+    <title> JavaScript Let's Make A Deal!!! </title>
+    <style>
+        body{
+            background-color: darkslategrey;
+            font-family: Arial, Helvetica, sans-serif;
+            color:aliceblue;
+            margin-top:25vh;
+            text-align:center;
+        }
+        h1{
+            color:darkorange;
+        }
+        h2{
+            color:salmon;
+            line-height: 2.0;
+        }
+        p{
+            color:goldenrod; 
+            line-height: 1.6;
+        }
+    </style>
+        <h1>
+        Lets Make A Deal!!! Win Prizes Big & Small!!!
+        </h1>
+
+        <h2 style="color:aliceblue;"> 
+            Pick a door - see what you've won!!!
+<!-- Pick a door - see what you've won - keep it or try another door? -->
+        </h2>
+
+        <select id="doorPicker" onchange="prizeFunction()">
+            <option> Pick a Door!
+            <option value="Door 1">Door One
+            <option value="Door 2">Door Two
+            <option value="Door 3">Door Three
+        </select>
+
+        <h2 id="winMessage">
+        </h2>
+
+        <script>
+            function prizeFunction(){
+                var doorNum = document.getElementById("doorPicker").value;
+            //Door 1 prize selection
+            if ((doorNum == "Door 1") || (doorNum == "Door 2") || (doorNum == "Door 3")){
+                prize = prizeSelector();
+                Announcement = "You selected " + doorNum + " - You've won " + prize;
+                document.getElementById("winMessage").innerHTML = Announcement;
+            //    doorNum += "You selected " + doorNum + " - You've won " + prize;
+            }
+            //Door 2 prize selection
+            //else if (doorNum == "Door2"){
+            //    var prize = prizeSelector();
+            //    doorNum += "You selected " + doorNum + " - You've won " + prize;
+            //}
+            //Door 3 prize selection
+            else {
+            Announcement = "You selected " + doorNum.slice(0,11) + " - which isn't really a selection, is it?";
+            document.getElementById("winMessage").innerHTML = Announcement;
+            //    prize = prizeSelector();
+            //    doorNum += "You selected " + doorNum + " - You've won " + prize;
+            }
+
+            }
+
+            function prizeSelector(){
+            const prizes = [];
+            prizes [0]= "a Tesla!";
+            prizes [1]= "a Large Bag-o-Glass!";
+            prizes [2]= "an Angry Porcupine!";
+            prizes [3]= "a Lifetime Supply of Rubberbands!";
+            prizes [4]= "a $250 Amazon Gift Voucher!";
+            prizes [5]= "a Bag-o-Teen-Laundry!";
+            prizes [6]= "10000 pennies!";
+            prizes [7]= "a Whoopie Cushion!";
+            prizes [8]= "a 64 Ounce Big Gulp!";
+            prizes [9]= "a Brick Wall!";
+
+            var prizeIndex = (Math.floor(Math.random()*100)) % 10;
+
+            return prizes[prizeIndex];
+            }
+
+        </script>
+
+</body>
+
+</html>

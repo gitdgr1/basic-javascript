@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!-- ASCII Art: Using for loops and the <pre> tag for formatting -->
+<!-- User input to size art shapes, one filled and one hollow -->
+
+<!-- Here is the pseudocode -->
+<!-- Tell the user what they will see and ask for a number within a range -->
+<!-- Do input validation and loop on user input until valid -->
+<!-- Build out string variables for the filled and hollow shapes -->
+<!-- Draw the filled and hollow shapes -->
+<!-- Future expansion - Offer the user a re-run and if yes, then clear page and restart -->
+<!-- Future expansion - If no re-run, thank the user for playing along -->
+<!-- Future expansion - give the user a lovely parting gift of ASCII Art-->
+
+<html>
+
+<body>
+    <title> JavaScript ASCII Art </title>
+    <style>
+        body{
+            background-color: darkslategrey;
+            font-family: Arial, Helvetica, sans-serif;
+            color:aliceblue;
+            margin-top:25vh;
+            text-align:center;
+        }
+        h1{
+            color:darkorange;
+        }
+        h2{
+            color:salmon;
+            line-height: 2.0;
+        }
+        p{
+            color:goldenrod; 
+            line-height: 1.6;
+        }
+    </style>
+    
+    <script>
+        function CheckInputAndDraw(){
+            var art="";
+            var art2="";
+            var typedInput = document.artSize.elements[0].value;
+
+            if (isNaN(typedInput)|| (typedInput < 3) || (typedInput > 20)){
+                document.getElementById("magic").innerHTML="Please enter a valid number";
+                document.getElementById("drawing").innerHTML="";
+                document.getElementById("anotherdrawing").innerHTML="";
+            } 
+            else{
+                for (row = 1; row <= Math.floor(typedInput); row++) {
+                    art+="</BR>";
+                    for (column = 1; column <= Math.floor(typedInput); column++){
+                        art+="*";
+                    }    
+                }
+
+                for (row = 1; row <= Math.floor(typedInput); row++) {
+                    art2+="</BR>";
+                    for (column = 1; column <= Math.floor(typedInput); column++){
+                        if ((column > 1) && (column < Math.floor(typedInput)) && (row != 1) && (row != Math.floor(typedInput))){
+                                art2+="&nbsp";
+                        } else {
+                            art2+="*";
+                        }
+                            
+                    }  
+                }
+                document.getElementById("magic").innerHTML="";
+                document.getElementById("drawing").innerHTML=art;
+                document.getElementById("anotherdrawing").innerHTML=art2;
+            }
+            
+        } 
+    </script>
+        <h1>
+        Lets Draw Pretty Shapes With Keyboard Characters!!!
+        </h1>
+
+        <h2 style="color:aliceblue;"> 
+            Please enter a number between 3 and 20 below
+        </h2>
+            <form name="artSize">
+                <input type="text" id="userinput">
+                <input type="button" value="Submit" onClick="CheckInputAndDraw()">
+            </form>
+            <p id="magic"></p>
+            <pre id="drawing"></pre>
+            <pre id="anotherdrawing"></pre>
+            <script>
+                document.getElementById('userinput').addEventListener('keydown', function (event) {
+                // Check if the pressed key is 'Enter'
+                if (event.key === 'Enter') {
+                    // Prevent the default behavior (form submission)
+                    event.preventDefault();
+                    // Trigger the form submission function
+                    CheckInputAndDraw();
+                }
+            });
+            </script>
+</body>
+</html>
+    
